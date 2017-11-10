@@ -17,7 +17,10 @@
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
     "vue-resource": "^1.3.4",
-    "axios": "0.17.0"
+    "axios": "0.17.0",
+    "jsbezier": "^0.9.1",
+    "katavorio": "0.21.0",
+    "mottle": "^0.8.0"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

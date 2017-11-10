@@ -9,7 +9,7 @@
             </div>
             <div class="library-content" >
                 <ul class="liblist">    
-                    <div v-for="i in item.listContent" class="library-module dragicon" draggable="true">
+                    <div v-for="i in item.listContent" class="library-module dragicon" draggable="true" @dragend="dragend(i)">
                         <img class="libicon" :src="i.iconImg"></img>
                         <a class="serv-name" title="">{{i.servName}}</a>
                     </div>
@@ -37,6 +37,10 @@
         this.$http.get('../../../static/lsceList.json').then(function(res) {
           _this.list = res.body.list
         })
+      },
+      dragend(i) {
+        event.preventDefault()
+        this.$emit('droped', i)
       }
     }
   }
