@@ -5,7 +5,7 @@ var exampleDropOptions = {
 }
 
 var exampleColor = '#00f'
-var exampleEndpoint1 = {
+var typeNumber = {
   endpoint: 'Rectangle',
   paintStyle: { width: 25, height: 21, fill: exampleColor },
   isSource: true,
@@ -27,7 +27,7 @@ var exampleEndpoint1 = {
 }
 
 var color2 = '#316b31'
-var exampleEndpoint2 = {
+var typeString = {
   endpoint: ['Dot', { radius: 11 }],
   paintStyle: { fill: color2 },
   isSource: true,
@@ -40,7 +40,7 @@ var exampleEndpoint2 = {
 }
 
 var example3Color = 'rgba(229,219,61,0.5)'
-var exampleEndpoint3 = {
+var typeBoolean = {
   endpoint: [ 'Dot', {radius: 15} ],
 // anchor: 'BottomLeft',
   paintStyle: { fill: example3Color, opacity: 0.5 },
@@ -59,4 +59,4 @@ var exampleEndpoint3 = {
   }
 }
 
-export {exampleEndpoint1, exampleEndpoint2, exampleEndpoint3}
+export {typeNumber, typeString, typeBoolean}

@@ -15,14 +15,20 @@
 
 <script>
 import {jsPlumb} from 'jsplumb'
-import {exampleEndpoint1, exampleEndpoint3} from 'common/point'
+import {mapGetters} from 'vuex'
+import {typeNumber, typeString, typeBoolean} from 'common/point'
 import Tool from 'components/base/tool'
+
 export default {
   data() {
     return {
-      instance: 'null',
-      a: ''
+      instance: ''
     }
+  },
+  computed: {
+    ...mapGetters([
+      'toolList'
+    ])
   },
   components: {
     Tool
@@ -47,13 +53,28 @@ export default {
       })
     },
     showWidget(item) {
-      let instance = this.instance
-      var e = event || window.event
-      console.log(`x: ${e.screenX}, y:${screenY}`) // 获取鼠标位置   
-      var i = 0
-      instance.my_addEndpoint('dragDropWindow1', { anchor: [0, 0.1, -1, 0] }, exampleEndpoint1, i++)
-      instance.my_addEndpoint('dragDropWindow1', { anchor: [1, 0.7, 1, 0] }, exampleEndpoint1, i++)
-      instance.my_addEndpoint('dragDropWindow1', { anchor: [1, 0.9, 1, 0] }, exampleEndpoint3, i++)
+      // var e = event || window.event
+      // console.log(`x: ${e.screenX}, y:${screenY}`) // 获取鼠标位置  
+      let inputLength = item.input.length
+      let outputLength = item.output.length
+      let type = ''
+      let i = 0
+      let n = 0
+      for (n = 0; n < inputLength; n++, i++) {
+        item.input[n].itype === 'Number' ? type = typeNumber : item.input[n].itype === 'String' ? type = typeString : type = typeBoolean
+        this.addPoint('dragDropWindow1', 'input', n, type, i)
+      }
+      for (n = 0; n < outputLength; n++, i++) {
+        item.output[n].otype === 'Number' ? type = typeNumber : item.output[n].otype === 'String' ? type = typeString : type = typeBoolean
+        this.addPoint('dragDropWindow1', 'output', n, type, i)
+      }
+    },
+    addPoint(el, io, n, type, i) {
+      if (io === 'input') {
+        this.instance.my_addEndpoint(el, { anchor: [0, 0.1 + n * 0.2, -1, 0] }, type, i)
+      } else if (io === 'output') {
+        this.instance.my_addEndpoint(el, { anchor: [1, 0.9 - n * 0.2, 1, 0] }, type, i)
+      }
     }
   }
 }

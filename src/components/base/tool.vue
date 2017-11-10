@@ -1,7 +1,7 @@
 <template>
 <div >
 	<div class="tool">
-		<div v-for="item in list" class="library-section" v-show="list.length">
+		<div v-for="item in toolList" class="library-section" >
             <div class="menu-header">
                 <a>{{item.listName}}</a>
                 <!-- <span class="iconfont icon-more" v-show="!item.displayFlag" @click="toggleDisplay(item)"></span>
@@ -22,28 +22,36 @@
 </template>
 
 <script>
-  export default {
-    data() {
-      return {
-        list: []
-      }
+import {mapMutations, mapGetters} from 'vuex'
+export default {
+  data() {
+    return {
+    }
+  },
+  created() {
+    this.getList()
+  },
+  computed: {
+    ...mapGetters([
+      'toolList'
+    ])
+  },
+  methods: {
+    ...mapMutations({
+      settoolList: 'SET_TOOLLIST'
+    }),
+    getList() {
+      this.$http.get('../../../static/lsceList.json').then(function(res) {
+        this.settoolList(res.body.list)
+        // console.log(this.toolList)
+      })
     },
-    created() {
-      this.getList()
-    },
-    methods: {
-      getList() {
-        var _this = this
-        this.$http.get('../../../static/lsceList.json').then(function(res) {
-          _this.list = res.body.list
-        })
-      },
-      dragend(i) {
-        event.preventDefault()
-        this.$emit('droped', i)
-      }
+    dragend(i) {
+      event.preventDefault()
+      this.$emit('droped', i)
     }
   }
+}
 </script>
 
 <style>
