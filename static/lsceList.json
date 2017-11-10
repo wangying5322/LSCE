@@ -1,0 +1,76 @@
+{
+  "list":[
+  {
+  	"listName":"Device",
+  	"listContent":[
+	    {
+	      "servName": "Tempersensor",
+	      "iconImg": "./static/image/temp.png",
+	      "id": "Service_1",
+	      "type": "functional",
+	      "info": {
+	        "title": "temperature sensor",
+	        "author": "wangying",
+	        "description": "This is a temperature sensor"
+	      },
+	      "input":[],
+	      "output":[
+	        {
+	        "oname": "output1",
+	        "otype": "Number"
+	        }
+	      ]
+	    },
+	    {
+	      "servName": "Air",
+	      "iconImg": "./static/image/air.png",
+	      "id": "Service_2",
+	      "type": "functional",
+	      "info": {
+	        "title": "Air conditioning",
+	        "author": "wangying",
+	        "description": "This is an Air conditioning"
+	      },
+	      "input":[
+	        {
+	        "iname": "cold",
+	        "itype": "Number"
+	        },
+	        {
+	        "iname": "hot",
+	        "itype": "Number"
+	        }
+	      ],
+	      "output":[]
+	    }
+	  ]
+  },{
+  "listName":"Control",
+  "listContent":[
+  	{
+      "servName": "filter",
+      "iconImg": "./static/image/filter.png",
+      "id": "control_1",
+      "type": "control",
+      "info": {
+        "title": "filter",
+        "author": "ServiceAuthor2",
+        "description": "ServiceDescription2"
+      },
+      "input":[
+        {
+        "iname": "input1",
+        "itype": "Number"
+        }
+      ],
+      "output":[
+        {
+        "oname": "output1",
+        "otype": "Number"
+        }
+      ]
+    }
+  ]
+  }
+  ]
+}
