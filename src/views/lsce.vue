@@ -5,9 +5,9 @@
 	</div>
 	<!-- <m-header bigTitle="可视化轻量级服务设计平台" smallTitle="LSCE"></m-header> -->
 	<Tool @droped='showWidget'></Tool>
-	<div class="showpanel" id="showpanel">
+	<div class="showpanel" >
 		<div class="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas">
-			<div class="window" id="dragDropWindow1">one<br/><br/><a href="#" class="cmdLink hide" rel="dragDropWindow1">toggle connections</a><br/><a href="#" class="cmdLink drag" rel="dragDropWindow1">disable dragging</a><br/><a href="#" class="cmdLink detach" rel="dragDropWindow1">detach all</a></div>
+			<!-- <div class="window" id="dragDropWindow1">one<br/><br/><a href="#" class="cmdLink hide" rel="dragDropWindow1">toggle connections</a><br/><a href="#" class="cmdLink drag" rel="dragDropWindow1">disable dragging</a><br/><a href="#" class="cmdLink detach" rel="dragDropWindow1">detach all</a></div> -->
 		</div>
 	</div>
 </div>
@@ -22,7 +22,8 @@ import Tool from 'components/base/tool'
 export default {
   data() {
     return {
-      instance: ''
+      instance: '',
+      n: 0
     }
   },
   computed: {
@@ -53,28 +54,52 @@ export default {
       })
     },
     showWidget(item) {
-      // var e = event || window.event
-      // console.log(`x: ${e.screenX}, y:${screenY}`) // 获取鼠标位置  
+      var e = event || window.event
+      var canvas = document.getElementById('canvas')
+      let widgetId = 'designWindow' + this.n++
+      // var oDiv = document.createElement('div')
+      // oDiv.className = 'window'
+      // oDiv.id = 'designWindow' + this.n++
+      // oDiv.style.top = e.clientY - 40 + 'px'
+      // oDiv.style.left = e.clientX - 330 + 'px'
+      // oDiv.style.position = 'absolute'
+      // canvas.appendChild(oDiv) 
+      this.addWidgetNode(canvas, e, this.addNode('div', 'window', widgetId))
+
       let inputLength = item.input.length
       let outputLength = item.output.length
       let type = ''
       let i = 0
-      let n = 0
-      for (n = 0; n < inputLength; n++, i++) {
-        item.input[n].itype === 'Number' ? type = typeNumber : item.input[n].itype === 'String' ? type = typeString : type = typeBoolean
-        this.addPoint('dragDropWindow1', 'input', n, type, i)
+      let pn = 0 // pointNum
+      for (pn = 0; pn < inputLength; pn++, i++) {
+        item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
+        this.addPoint(widgetId, 'input', pn, type, i)
       }
-      for (n = 0; n < outputLength; n++, i++) {
-        item.output[n].otype === 'Number' ? type = typeNumber : item.output[n].otype === 'String' ? type = typeString : type = typeBoolean
-        this.addPoint('dragDropWindow1', 'output', n, type, i)
+      for (pn = 0; pn < outputLength; pn++, i++) {
+        item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
+        this.addPoint(widgetId, 'output', pn, type, i)
+      }
+
+      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'));
+    },
+    addPoint(el, io, pn, type, index) {
+      if (io === 'input') {
+        this.instance.my_addEndpoint(el, { anchor: [0, 0.1 + pn * 0.2, -1, 0] }, type, index)
+      } else if (io === 'output') {
+        this.instance.my_addEndpoint(el, { anchor: [1, 0.9 - pn * 0.2, 1, 0] }, type, index)
       }
     },
-    addPoint(el, io, n, type, i) {
-      if (io === 'input') {
-        this.instance.my_addEndpoint(el, { anchor: [0, 0.1 + n * 0.2, -1, 0] }, type, i)
-      } else if (io === 'output') {
-        this.instance.my_addEndpoint(el, { anchor: [1, 0.9 - n * 0.2, 1, 0] }, type, i)
-      }
+    addNode(nodetype, classname, id) {
+      let node = document.createElement(nodetype)
+      node.className = classname
+      node.id = id
+      return node
+    },
+    addWidgetNode(el, e, node) {  
+      node.style.top = e.clientY - 40 + 'px'
+      node.style.left = e.clientX - 330 + 'px'
+      node.style.position = 'absolute'
+      el.appendChild(node) 
     }
   }
 }
@@ -105,9 +130,13 @@ export default {
 	.showpanel{
 		position: absolute;
 		top: 40px;
+		bottom: 0;
 		left: 330px;
-		width: 100%;
-		height: 100%;
+		right: 0;
 		border: 1px solid #ccc;
+	}
+	#canvas{
+		height: 100%;
+		bottom: 0;
 	}
 </style>
