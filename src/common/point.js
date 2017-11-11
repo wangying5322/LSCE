@@ -34,7 +34,7 @@ var typeString = {
   scope: 'Green',
   connectorStyle: { stroke: color2, strokeWidth: 6 },
   connector: [ 'Bezier', { curviness: 63 } ],
-  maxConnections: 3, // 不能detach
+  maxConnections: 3, 
   isTarget: true,
   dropOptions: exampleDropOptions
 }

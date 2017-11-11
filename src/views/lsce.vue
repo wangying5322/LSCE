@@ -23,7 +23,8 @@ export default {
   data() {
     return {
       instance: '',
-      n: 0
+      n: 0,
+      connections: []
     }
   },
   computed: {
@@ -50,6 +51,28 @@ export default {
           Endpoint: 'Rectangle',
           Anchors: ['TopCenter', 'TopCenter'],
           Container: 'canvas'
+        })
+
+        _this.instance.batch(function () {
+          _this.instance.bind('beforeDrop', function (params) {
+            return confirm('Connect ' + params.sourceId + 'to' + params.targetId + '?')
+          })
+          _this.instance.bind('connection', function (info, originalEvent) {
+            _this.updateConnections(info)
+          })
+          _this.instance.bind('click', function (conn) {
+            _this.instance.deleteConnection(conn)
+            // 原来叫detach，后来改名了，垃圾库
+          })
+          _this.instance.bind('beforeDetach', function (conn) {
+            return confirm('Delete connection?');
+          });
+          _this.instance.bind('connectionDetached', function (info, originalEvent) {
+            _this.updateConnections(info, true);
+          })
+          _this.instance.bind('connectionMoved', function (info, originalEvent) {
+            _this.updateConnections(info, true);
+          })
         })
       })
     },
@@ -111,6 +134,31 @@ export default {
       node.style.display = 'block'
       node.style.position = 'absolute'
       obj.appendChild(node)
+    },
+    updateConnections(conn, remove) {
+      if (!remove) {
+        this.connections.push(conn) // connections记录已经连过的线
+      } else { // 如果被移除了，相应位置为-1，再从数组移除
+        let idx = -1
+        for (var i = 0; i < this.connections.length; i++) {
+          if (this.connections[i].connection === conn.connection) {
+            idx = i
+            break
+          }
+        }
+        if (idx !== -1) this.connections.splice(idx, 1)
+      }
+      if (this.connections.length > 0) { // 数组中记录了已连接的线不为空，更新表格信息
+        // var s = "<span><strong>Connections</strong></span><br/><br/><table><tr><th>Scope</th><th>Source</th><th>Target</th></tr>"
+        // for (var j = 0; j < connections.length; j++) {
+        //     s = s + "<tr><td>" + connections[j].connection.scope + "</td>" + "<td>" + connections[j].connection.sourceId +'.' + connections[j].sourceEndpoint.id.match(/_(\S*)_/)[1] + "</td><td>" + connections[j].connection.targetId+ '.' + connections[j].targetEndpoint.id.match(/_(\S*)_/)[1] + "</td></tr>";
+        // }
+        // showConnectionInfo(s);
+        console.log(this.connections)
+      } else {
+        // hideConnectionInfo();
+        console.log('no connection')
+      }
     }
   }
 }
