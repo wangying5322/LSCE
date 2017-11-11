@@ -18,7 +18,7 @@ import {jsPlumb} from 'jsplumb'
 import {mapGetters} from 'vuex'
 import {typeNumber, typeString, typeBoolean} from 'common/point'
 import Tool from 'components/base/tool'
-
+const PORTLINEHEIGHT = 24
 export default {
   data() {
     return {
@@ -54,17 +54,11 @@ export default {
       })
     },
     showWidget(item) {
+      console.log(item)
       var e = event || window.event
-      var canvas = document.getElementById('canvas')
+      
       let widgetId = 'designWindow' + this.n++
-      // var oDiv = document.createElement('div')
-      // oDiv.className = 'window'
-      // oDiv.id = 'designWindow' + this.n++
-      // oDiv.style.top = e.clientY - 40 + 'px'
-      // oDiv.style.left = e.clientX - 330 + 'px'
-      // oDiv.style.position = 'absolute'
-      // canvas.appendChild(oDiv) 
-      this.addWidgetNode(canvas, e, this.addNode('div', 'window', widgetId))
+      this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
 
       let inputLength = item.input.length
       let outputLength = item.output.length
@@ -74,10 +68,12 @@ export default {
       for (pn = 0; pn < inputLength; pn++, i++) {
         item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
         this.addPoint(widgetId, 'input', pn, type, i)
+        this.addPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'top', pn * PORTLINEHEIGHT)
       }
       for (pn = 0; pn < outputLength; pn++, i++) {
         item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
         this.addPoint(widgetId, 'output', pn, type, i)
+        this.addPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'bottom', pn * PORTLINEHEIGHT)
       }
 
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'));
@@ -96,10 +92,25 @@ export default {
       return node
     },
     addWidgetNode(el, e, node) {  
+      let obj = document.getElementById(el)
       node.style.top = e.clientY - 40 + 'px'
       node.style.left = e.clientX - 330 + 'px'
       node.style.position = 'absolute'
-      el.appendChild(node) 
+      obj.appendChild(node) 
+    },
+    addPortName(el, node, text, pos, val) {
+      let obj = document.getElementById(el)
+      node.innerText = text
+      if (pos === 'top') {
+        node.style.top = val + 'px'
+        node.style.left = 0
+      } else if (pos === 'bottom') {
+        node.style.bottom = val + 'px'
+        node.style.right = 0
+      }
+      node.style.display = 'block'
+      node.style.position = 'absolute'
+      obj.appendChild(node)
     }
   }
 }
@@ -138,5 +149,9 @@ export default {
 	#canvas{
 		height: 100%;
 		bottom: 0;
+	}
+	.portname{
+		font-size: 12px;
+		padding: 0 3px 0 3px;
 	}
 </style>
