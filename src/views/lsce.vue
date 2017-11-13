@@ -23,7 +23,7 @@ export default {
   data() {
     return {
       instance: '',
-      n: 0,
+      combinedToollist: [],
       connections: []
     }
   },
@@ -31,6 +31,11 @@ export default {
     ...mapGetters([
       'toolList'
     ])
+  },
+  watch: {
+    toolList: function() {
+      this._normalizeToollist()
+    }
   },
   components: {
     Tool
@@ -43,7 +48,7 @@ export default {
       var _this = this
       jsPlumb.ready(function() {
         _this.instance = jsPlumb.getInstance({
-          DragOptions: { cursor: 'pointer', zIndex: 2000 },
+          DragOptions: { cursor: 'pointer', zIndex: 200 },
           PaintStyle: { stroke: '#666' },
           EndpointHoverStyle: { fill: 'orange' },
           HoverPaintStyle: { stroke: 'orange' },
@@ -62,7 +67,6 @@ export default {
           })
           _this.instance.bind('click', function (conn) {
             _this.instance.deleteConnection(conn)
-            // 原来叫detach，后来改名了，垃圾库
           })
           _this.instance.bind('beforeDetach', function (conn) {
             return confirm('Delete connection?');
@@ -80,18 +84,19 @@ export default {
       console.log(item)
       var e = event || window.event
       
-      let widgetId = 'designWindow' + this.n++
+      // let widgetId = 'DeviceWidget' + this.n++
+      let widgetId = item.servName
       this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
-
+      this.addPortName(widgetId, this.addNode('span', '', ''), item.servName, 'title', 0)
       let inputLength = item.input.length
       let outputLength = item.output.length
       let type = ''
       let i = 0
-      let pn = 0 // pointNum
+      let pn = 0 // input/output pointNum
       for (pn = 0; pn < inputLength; pn++, i++) {
         item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
         this.addPoint(widgetId, 'input', pn, type, i)
-        this.addPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'top', pn * PORTLINEHEIGHT)
+        this.addPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'top', (pn + 1) * PORTLINEHEIGHT)
       }
       for (pn = 0; pn < outputLength; pn++, i++) {
         item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
@@ -103,7 +108,7 @@ export default {
     },
     addPoint(el, io, pn, type, index) {
       if (io === 'input') {
-        this.instance.my_addEndpoint(el, { anchor: [0, 0.1 + pn * 0.2, -1, 0] }, type, index)
+        this.instance.my_addEndpoint(el, { anchor: [0, 0.3 + pn * 0.2, -1, 0] }, type, index)
       } else if (io === 'output') {
         this.instance.my_addEndpoint(el, { anchor: [1, 0.9 - pn * 0.2, 1, 0] }, type, index)
       }
@@ -127,15 +132,26 @@ export default {
       if (pos === 'top') {
         node.style.top = val + 'px'
         node.style.left = 0
+        node.style.position = 'absolute'
       } else if (pos === 'bottom') {
         node.style.bottom = val + 'px'
         node.style.right = 0
+        node.style.position = 'absolute'
+      } else if (pos === 'title') {
+        node.style.top = val + 'px'
+        node.style.textAlign = 'center'
+        node.style.fontWeight = 'bold'
       }
       node.style.display = 'block'
-      node.style.position = 'absolute'
       obj.appendChild(node)
     },
     updateConnections(conn, remove) {
+      let sourceDevice = this._getDeviceContent(conn.sourceId)
+      let targetDevice = this._getDeviceContent(conn.targetId)
+      let sourceEndpointIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]
+      let targetEndpointIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
+      console.log(`connection[${conn.connection.id}] source: ${sourceDevice.servName}.${sourceDevice.output[sourceEndpointIndex].oname}`)
+      console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
       if (!remove) {
         this.connections.push(conn) // connections记录已经连过的线
       } else { // 如果被移除了，相应位置为-1，再从数组移除
@@ -149,16 +165,23 @@ export default {
         if (idx !== -1) this.connections.splice(idx, 1)
       }
       if (this.connections.length > 0) { // 数组中记录了已连接的线不为空，更新表格信息
-        // var s = "<span><strong>Connections</strong></span><br/><br/><table><tr><th>Scope</th><th>Source</th><th>Target</th></tr>"
-        // for (var j = 0; j < connections.length; j++) {
-        //     s = s + "<tr><td>" + connections[j].connection.scope + "</td>" + "<td>" + connections[j].connection.sourceId +'.' + connections[j].sourceEndpoint.id.match(/_(\S*)_/)[1] + "</td><td>" + connections[j].connection.targetId+ '.' + connections[j].targetEndpoint.id.match(/_(\S*)_/)[1] + "</td></tr>";
-        // }
-        // showConnectionInfo(s);
         console.log(this.connections)
       } else {
-        // hideConnectionInfo();
         console.log('no connection')
       }
+    },
+    _getDeviceContent(deviceName) {
+      let targetDevice = ''
+      this.combinedToollist.forEach((item) => {
+        if (item.servName === deviceName) {
+          targetDevice = item
+        }
+      })
+      return targetDevice
+    },
+    _normalizeToollist() {
+      this.combinedToollist = this.toolList[0].listContent.concat(this.toolList[1].listContent)
+      console.log(this.combinedToollist)
     }
   }
 }
