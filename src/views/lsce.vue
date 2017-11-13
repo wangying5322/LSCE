@@ -164,7 +164,7 @@ export default {
         }
         if (idx !== -1) this.connections.splice(idx, 1)
       }
-      if (this.connections.length > 0) { // 数组中记录了已连接的线不为空，更新表格信息
+      if (this.connections.length > 0) { 
         console.log(this.connections)
       } else {
         console.log('no connection')
