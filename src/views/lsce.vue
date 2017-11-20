@@ -1,15 +1,15 @@
 <template>
 <div >
-	<div class="m-header">
-		<p class="topbar"><strong>可视化轻量级服务设计平台</strong> <small>LSCE</small></p>
-	</div>
-	<!-- <m-header bigTitle="可视化轻量级服务设计平台" smallTitle="LSCE"></m-header> -->
-	<Tool @droped='showWidget'></Tool>
-	<div class="showpanel" >
-		<div class="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas">
-			<!-- <div class="window" id="dragDropWindow1">one<br/><br/><a href="#" class="cmdLink hide" rel="dragDropWindow1">toggle connections</a><br/><a href="#" class="cmdLink drag" rel="dragDropWindow1">disable dragging</a><br/><a href="#" class="cmdLink detach" rel="dragDropWindow1">detach all</a></div> -->
-		</div>
-	</div>
+  <div class="m-header">
+    <p class="topbar"><strong>可视化轻量级服务设计平台</strong> <small>LSCE</small></p>
+  </div>
+  <!-- <m-header bigTitle="可视化轻量级服务设计平台" smallTitle="LSCE"></m-header> -->
+  <Tool @droped='showWidget'></Tool>
+  <div class="showpanel" >
+    <div class="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas">
+      <!-- <div class="window" id="dragDropWindow1">one<br/><br/><a href="#" class="cmdLink hide" rel="dragDropWindow1">toggle connections</a><br/><a href="#" class="cmdLink drag" rel="dragDropWindow1">disable dragging</a><br/><a href="#" class="cmdLink detach" rel="dragDropWindow1">detach all</a></div> -->
+    </div>
+  </div>
 </div>
 </template>
 
@@ -61,7 +61,6 @@ export default {
           Anchors: ['TopCenter', 'TopCenter'],
           Container: 'canvas'
         })
-
         _this.instance.batch(function () {
           _this.instance.bind('beforeDrop', function (params) {
             return confirm('Connect ' + params.sourceId + 'to' + params.targetId + '?')
@@ -87,7 +86,6 @@ export default {
     showWidget(item) {
       console.log(item)
       var e = event || window.event
-      // let widgetId = 'DeviceWidget' + this.n++
       let widgetId = item.servName
       let wrapId = 'Filter' + this.n++
       if (item.type === FUNCTIONAL) {
@@ -95,6 +93,36 @@ export default {
       } else if (item.type === FILTER) {
         this.addFilterNode(item, e, widgetId, wrapId)
       }
+    },
+    addFunctionalNode(item, e, widgetId) { // 添加port节点
+      let inputLength = item.input.length
+      let outputLength = item.output.length
+      let type = ''
+      let i = 0
+      let pn = 0 // input/output pointNum
+      this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
+      this.addFunctionalPortName(widgetId, this.addNode('span', '', ''), item.servName, 'title', 0)
+      for (pn = 0; pn < inputLength; pn++, i++) {
+        item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
+        this.addFunctionalPoint(widgetId, 'input', pn, type, i)
+        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'left', (pn + 1) * PORTLINEHEIGHT)
+      }
+      for (pn = 0; pn < outputLength; pn++, i++) {
+        item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
+        this.addFunctionalPoint(widgetId, 'output', pn, type, i)
+        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'right', pn * PORTLINEHEIGHT)
+      }
+      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
+    },
+    addFilterNode(item, e, widgetId, wrapId) {
+      this.addWidgetNode('canvas', e, this.addNode('div', 'filterWrap', widgetId))
+      this.addWidgetNode(widgetId, e, this.addNode('div', 'filter', wrapId))
+      this.addAllFilterPortName(widgetId, item)
+      let type = ''
+      item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
+      this.addFilterPoint(widgetId, type, 0)
+      this.addWidgetNode(widgetId, e, this.addNode('input', 'filterInput', ''))
+      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filterWrap'))
     },
     addNode(nodetype, classname, id) { // 添加节点类型
       let node = document.createElement(nodetype)
@@ -166,43 +194,13 @@ export default {
       node.style.display = 'block'
       obj.appendChild(node)
     },
-    addAllFilterPortName(wrapId, item) {
-      this.addFilterPortName(wrapId, this.addNode('span', '', ''), item.servName, 'title')
-      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.input[0].iname, 'left')
-      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
-      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
+    addAllFilterPortName(id, item) {
+      this.addFilterPortName(id, this.addNode('span', '', ''), item.servName, 'title')
+      this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.input[0].iname, 'left')
+      this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
+      this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
     },
-    addFunctionalNode(item, e, widgetId) { // 添加port节点
-      let inputLength = item.input.length
-      let outputLength = item.output.length
-      let type = ''
-      let i = 0
-      let pn = 0 // input/output pointNum
-      this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
-      this.addFunctionalPortName(widgetId, this.addNode('span', '', ''), item.servName, 'title', 0)
-      for (pn = 0; pn < inputLength; pn++, i++) {
-        item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
-        this.addFunctionalPoint(widgetId, 'input', pn, type, i)
-        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'left', (pn + 1) * PORTLINEHEIGHT)
-      }
-      for (pn = 0; pn < outputLength; pn++, i++) {
-        item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
-        this.addFunctionalPoint(widgetId, 'output', pn, type, i)
-        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'right', pn * PORTLINEHEIGHT)
-      }
-      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
-    },
-    addFilterNode(item, e, widgetId, wrapId) {
-      this.addWidgetNode('canvas', e, this.addNode('div', 'filterWrap', wrapId))
-      this.addWidgetNode(wrapId, e, this.addNode('div', 'filter', widgetId))
-      this.addAllFilterPortName(wrapId, item)
-      let type = ''
-      item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
-      this.addFilterPoint(wrapId, type, 0)
-
-      this.addWidgetNode(wrapId, e, this.addNode('input', 'filterInput', ''))
-      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filterWrap'))
-    },
+    
     updateConnections(conn, remove) {
       this.getDetail(conn)
       if (!remove) {
@@ -250,45 +248,46 @@ export default {
 
 <style>
   body, html {
-  	margin: 0;
-  	padding: 0;
+    margin: 0;
+    padding: 0;
   }
-	.m-header{
-		position: fixed;
-		top: 0;
-		width: 100%;
-		z-index: 1000;
-		padding-left: 10px;
-		height: 40px;
-		background-color: #0e90d2;
-		border-color: #0b6fa2;
-		color: #fff;
-	}
-	.topbar{
-		float:left;
-		margin: 0;
-		line-height: 40px;
-		font-size:18px;
-	}
-	.showpanel{
-		position: absolute;
-		top: 40px;
-		bottom: 0;
-		left: 330px;
-		right: 0;
-		border: 1px solid #ccc;
-	}
-	#canvas{
-		height: 100%;
-		bottom: 0;
-	}
-	.portname{
-		font-size: 12px;
-		padding: 0 3px 0 3px;
-	}
+  .m-header{
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding-left: 10px;
+    height: 40px;
+    background-color: #0e90d2;
+    border-color: #0b6fa2;
+    color: #fff;
+  }
+  .topbar{
+    float:left;
+    margin: 0;
+    line-height: 40px;
+    font-size:18px;
+  }
+  .showpanel{
+    position: absolute;
+    top: 40px;
+    bottom: 0;
+    left: 330px;
+    right: 0;
+    border: 1px solid #ccc;
+  }
+  #canvas{
+    height: 100%;
+    bottom: 0;
+  }
+  .portname{
+    font-size: 12px;
+    padding: 0 3px 0 3px;
+  }
   .filterWrap {
     width: 170px;
     height: 170px;
+    z-index: 25;
   }
   .filter{
     font-family: serif;

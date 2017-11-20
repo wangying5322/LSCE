@@ -171,7 +171,8 @@ li {
 }
 
 .jtk-endpoint {
-    z-index:12;
+    // z-index:12;
+    z-index:9;
     opacity:0.8;
     cursor:pointer;
 }
