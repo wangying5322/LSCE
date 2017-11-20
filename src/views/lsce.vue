@@ -19,12 +19,16 @@ import {mapGetters} from 'vuex'
 import {typeNumber, typeString, typeBoolean} from 'common/point'
 import Tool from 'components/base/tool'
 const PORTLINEHEIGHT = 24
+const FUNCTIONAL = 'functional'
+const FILTER = 'filter'
+const FILTERHEIGHT = 170
 export default {
   data() {
     return {
       instance: '',
       combinedToollist: [],
-      connections: []
+      connections: [],
+      n: 0
     }
   },
   computed: {
@@ -83,57 +87,50 @@ export default {
     showWidget(item) {
       console.log(item)
       var e = event || window.event
-      
       // let widgetId = 'DeviceWidget' + this.n++
       let widgetId = item.servName
-      this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
-      this.addPortName(widgetId, this.addNode('span', '', ''), item.servName, 'title', 0)
-      let inputLength = item.input.length
-      let outputLength = item.output.length
-      let type = ''
-      let i = 0
-      let pn = 0 // input/output pointNum
-      for (pn = 0; pn < inputLength; pn++, i++) {
-        item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
-        this.addPoint(widgetId, 'input', pn, type, i)
-        this.addPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'top', (pn + 1) * PORTLINEHEIGHT)
+      let wrapId = 'Filter' + this.n++
+      if (item.type === FUNCTIONAL) {
+        this.addFunctionalNode(item, e, widgetId)
+      } else if (item.type === FILTER) {
+        this.addFilterNode(item, e, widgetId, wrapId)
       }
-      for (pn = 0; pn < outputLength; pn++, i++) {
-        item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
-        this.addPoint(widgetId, 'output', pn, type, i)
-        this.addPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'bottom', pn * PORTLINEHEIGHT)
-      }
-
-      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'));
     },
-    addPoint(el, io, pn, type, index) {
+    addNode(nodetype, classname, id) { // 添加节点类型
+      let node = document.createElement(nodetype)
+      node.className = classname
+      node.id = id
+      return node
+    },
+    addWidgetNode(el, e, node) { // 添加到定点位置
+      let obj = document.getElementById(el)
+      if (el === 'canvas') {
+        node.style.top = e.clientY - 40 + 'px'
+        node.style.left = e.clientX - 330 + 'px'
+      }
+      node.style.position = 'absolute'
+      obj.appendChild(node) 
+    },
+    addFunctionalPoint(el, io, pn, type, index) { // 添加port
       if (io === 'input') {
         this.instance.my_addEndpoint(el, { anchor: [0, 0.3 + pn * 0.2, -1, 0] }, type, index)
       } else if (io === 'output') {
         this.instance.my_addEndpoint(el, { anchor: [1, 0.9 - pn * 0.2, 1, 0] }, type, index)
       }
     },
-    addNode(nodetype, classname, id) {
-      let node = document.createElement(nodetype)
-      node.className = classname
-      node.id = id
-      return node
+    addFilterPoint(el, type, index) {
+      this.instance.my_addEndpoint(el, { anchor: 'LeftMiddle' }, type, index++)
+      this.instance.my_addEndpoint(el, { anchor: 'RightMiddle' }, type, index++)
+      this.instance.my_addEndpoint(el, { anchor: 'BottomCenter' }, type, index++)
     },
-    addWidgetNode(el, e, node) {  
-      let obj = document.getElementById(el)
-      node.style.top = e.clientY - 40 + 'px'
-      node.style.left = e.clientX - 330 + 'px'
-      node.style.position = 'absolute'
-      obj.appendChild(node) 
-    },
-    addPortName(el, node, text, pos, val) {
+    addFunctionalPortName(el, node, text, pos, val) { // 添加portname
       let obj = document.getElementById(el)
       node.innerText = text
-      if (pos === 'top') {
+      if (pos === 'left') {
         node.style.top = val + 'px'
         node.style.left = 0
         node.style.position = 'absolute'
-      } else if (pos === 'bottom') {
+      } else if (pos === 'right') {
         node.style.bottom = val + 'px'
         node.style.right = 0
         node.style.position = 'absolute'
@@ -145,13 +142,64 @@ export default {
       node.style.display = 'block'
       obj.appendChild(node)
     },
+    addFilterPortName(el, node, text, pos) {
+      let obj = document.getElementById(el)
+      node.innerText = text
+      if (pos === 'title') {
+        node.style.paddingTop = '35px'
+        node.style.textAlign = 'center'
+        node.style.fontWeight = 'bold'
+      } else if (pos === 'left') { // input
+        node.style.top = FILTERHEIGHT / 2 - 6 + 'px'
+        node.style.left = '12px'
+        node.style.position = 'absolute'
+      } else if (pos === 'right') { // Y
+        node.style.top = FILTERHEIGHT / 2 - 6 + 'px'
+        node.style.right = '12px'
+        node.style.position = 'absolute'
+      } else if (pos === 'bottom') { // N
+        node.style.bottom = '8px'
+        node.style.left = FILTERHEIGHT / 2 - 8 + 'px'
+        node.style.textAlign = 'center'
+        node.style.position = 'absolute'
+      }
+      node.style.display = 'block'
+      obj.appendChild(node)
+    },
+    addFunctionalNode(item, e, widgetId) {
+      let inputLength = item.input.length
+      let outputLength = item.output.length
+      let type = ''
+      let i = 0
+      let pn = 0 // input/output pointNum
+      this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
+      this.addFunctionalPortName(widgetId, this.addNode('span', '', ''), item.servName, 'title', 0)
+      for (pn = 0; pn < inputLength; pn++, i++) {
+        item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
+        this.addFunctionalPoint(widgetId, 'input', pn, type, i)
+        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'left', (pn + 1) * PORTLINEHEIGHT)
+      }
+      for (pn = 0; pn < outputLength; pn++, i++) {
+        item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
+        this.addFunctionalPoint(widgetId, 'output', pn, type, i)
+        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'right', pn * PORTLINEHEIGHT)
+      }
+      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
+    },
+    addFilterNode(item, e, widgetId, wrapId) {
+      this.addWidgetNode('canvas', e, this.addNode('div', 'filterWrap', wrapId))
+      this.addWidgetNode(wrapId, e, this.addNode('div', 'filter', widgetId))
+      this.addFilterPortName(wrapId, this.addNode('span', '', ''), item.servName, 'title')
+      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.input[0].iname, 'left')
+      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
+      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
+      let type = ''
+      item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
+      this.addFilterPoint(wrapId, type, 0)
+      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filterWrap'))
+    },
     updateConnections(conn, remove) {
-      let sourceDevice = this._getDeviceContent(conn.sourceId)
-      let targetDevice = this._getDeviceContent(conn.targetId)
-      let sourceEndpointIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]
-      let targetEndpointIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
-      console.log(`connection[${conn.connection.id}] source: ${sourceDevice.servName}.${sourceDevice.output[sourceEndpointIndex].oname}`)
-      console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
+      this.getDetail(conn)
       if (!remove) {
         this.connections.push(conn) // connections记录已经连过的线
       } else { // 如果被移除了，相应位置为-1，再从数组移除
@@ -170,7 +218,7 @@ export default {
         console.log('no connection')
       }
     },
-    _getDeviceContent(deviceName) {
+    _getDeviceContent(deviceName) { // 方便转成json
       let targetDevice = ''
       this.combinedToollist.forEach((item) => {
         if (item.servName === deviceName) {
@@ -179,9 +227,17 @@ export default {
       })
       return targetDevice
     },
-    _normalizeToollist() {
+    _normalizeToollist() { // 方便转成json
       this.combinedToollist = this.toolList[0].listContent.concat(this.toolList[1].listContent)
       console.log(this.combinedToollist)
+    },
+    getDetail(conn) { // 打印连接信息
+      let sourceDevice = this._getDeviceContent(conn.sourceId)
+      let targetDevice = this._getDeviceContent(conn.targetId)
+      let sourceEndpointIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]
+      let targetEndpointIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
+      console.log(`connection[${conn.connection.id}] source: ${sourceDevice.servName}.${sourceDevice.output[sourceEndpointIndex].oname}`)
+      console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
     }
   }
 }
@@ -225,4 +281,36 @@ export default {
 		font-size: 12px;
 		padding: 0 3px 0 3px;
 	}
+  .filterWrap {
+    width: 170px;
+    height: 170px;
+  }
+  .filter{
+    font-family: serif;
+    background-color: white;
+    border: 1px solid #346789;
+    z-index: -1;
+    cursor: pointer;
+    box-shadow: 2px 2px 19px #aaa;
+    -o-box-shadow: 2px 2px 19px #aaa;
+    -webkit-box-shadow: 2px 2px 19px #aaa;
+    -moz-box-shadow: 2px 2px 19px #aaa;
+    -moz-border-radius: 0.5em;
+    border-radius: 0.5em;
+    position: absolute;
+    color: black;
+    top: 25px;
+    left: 25px;
+    width: 120px;
+    height: 120px;
+    line-height: 24px;
+    -webkit-transition: -webkit-box-shadow 0.15s ease-in;
+    -moz-transition: -moz-box-shadow 0.15s ease-in;
+    -o-transition: -o-box-shadow 0.15s ease-in;
+    transition: box-shadow 0.15s ease-in;
+    -moz-transform:rotate(45deg);
+    -webkit-transform:rotate(45deg);
+    -o-transform:rotate(45deg);
+    transform:rotate(45deg);
+  }
 </style>

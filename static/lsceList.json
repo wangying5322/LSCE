@@ -16,7 +16,7 @@
 	      "input":[],
 	      "output":[
 	        {
-	        "oname": "output1",
+	        "oname": "temperature",
 	        "otype": "Number"
 	        }
 	      ]
@@ -48,25 +48,53 @@
   "listName":"Control",
   "listContent":[
   	{
-      "servName": "filter",
+      "servName": "NumFilter",
       "iconImg": "./static/image/filter.png",
       "id": "control_1",
-      "type": "control",
+      "type": "filter",
       "info": {
-        "title": "filter",
-        "author": "ServiceAuthor2",
-        "description": "ServiceDescription2"
+        "title": "number filter",
+        "author": "wangying",
+        "description": "This is a Number filter"
       },
       "input":[
         {
-        "iname": "input1",
+        "iname": "In",
         "itype": "Number"
         }
       ],
       "output":[
         {
-        "oname": "output1",
+        "oname": "Y",
         "otype": "Number"
+        },{
+        "oname": "N",
+        "otype": "Number"
+        }
+      ]
+    },{
+      "servName": "StrFilter",
+      "iconImg": "./static/image/filter.png",
+      "id": "control_2",
+      "type": "filter",
+      "info": {
+        "title": "string filter",
+        "author": "wangying",
+        "description": "This is a String filter"
+      },
+      "input":[
+        {
+        "iname": "In",
+        "itype": "String"
+        }
+      ],
+      "output":[
+        {
+        "oname": "Y",
+        "otype": "String"
+        },{
+        "oname": "N",
+        "otype": "String"
         }
       ]
     }
