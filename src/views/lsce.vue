@@ -6,8 +6,7 @@
   <!-- <m-header bigTitle="可视化轻量级服务设计平台" smallTitle="LSCE"></m-header> -->
   <Tool @droped='showWidget'></Tool>
   <div class="showpanel" >
-    <div class="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas">
-      <!-- <div class="window" id="dragDropWindow1">one<br/><br/><a href="#" class="cmdLink hide" rel="dragDropWindow1">toggle connections</a><br/><a href="#" class="cmdLink drag" rel="dragDropWindow1">disable dragging</a><br/><a href="#" class="cmdLink detach" rel="dragDropWindow1">detach all</a></div> -->
+    <div class="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas" @keyup='getInputText'>
     </div>
   </div>
 </div>
@@ -22,13 +21,15 @@ const PORTLINEHEIGHT = 24
 const FUNCTIONAL = 'functional'
 const FILTER = 'filter'
 const FILTERHEIGHT = 170
+
 export default {
   data() {
     return {
       instance: '',
       combinedToollist: [],
       connections: [],
-      n: 0
+      n: -1,
+      filterInputValue: []
     }
   },
   computed: {
@@ -87,7 +88,7 @@ export default {
       console.log(item)
       var e = event || window.event
       let widgetId = item.servName
-      let wrapId = 'Filter' + this.n++
+      let wrapId = 'Filter' + ++this.n
       if (item.type === FUNCTIONAL) {
         this.addFunctionalNode(item, e, widgetId)
       } else if (item.type === FILTER) {
@@ -114,14 +115,14 @@ export default {
       }
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
     },
-    addFilterNode(item, e, widgetId, wrapId) {
+    addFilterNode(item, e, widgetId, wrapId) { // 拖出Filter框后渲染的画面
       this.addWidgetNode('canvas', e, this.addNode('div', 'filterWrap', widgetId))
       this.addWidgetNode(widgetId, e, this.addNode('div', 'filter', wrapId))
       this.addAllFilterPortName(widgetId, item)
       let type = ''
       item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
       this.addFilterPoint(widgetId, type, 0)
-      this.addWidgetNode(widgetId, e, this.addNode('input', 'filterInput', ''))
+      this.addFilterInput(widgetId, e, item)
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filterWrap'))
     },
     addNode(nodetype, classname, id) { // 添加节点类型
@@ -200,7 +201,23 @@ export default {
       this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
       this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
     },
-    
+    addFilterInput(el, e, item) {
+      this.addWidgetNode(el, e, this.addNode('input', 'filterInput', 'filterInput' + this.n))
+      let filterInput = {}
+      filterInput.id = 'filterInput' + this.n
+      filterInput.serv = item.servName
+      filterInput.value = ''
+      this.filterInputValue.push(filterInput)
+    },
+    getInputText() { // 获取所有input的实时值并保存在filterInputValue中
+      let length = this.filterInputValue.length
+      let obj = ''
+      for (let i = 0; i < length; i++) {
+        let id = 'filterInput' + i
+        obj = document.getElementById(this.filterInputValue[i].id)
+        console.log(`${id}: ${obj.value}`)
+      }
+    },
     updateConnections(conn, remove) {
       this.getDetail(conn)
       if (!remove) {
