@@ -111,7 +111,7 @@ export default {
       node.style.position = 'absolute'
       obj.appendChild(node) 
     },
-    addFunctionalPoint(el, io, pn, type, index) { // 添加port
+    addFunctionalPoint(el, io, pn, type, index) { // 添加port样式锚点
       if (io === 'input') {
         this.instance.my_addEndpoint(el, { anchor: [0, 0.3 + pn * 0.2, -1, 0] }, type, index)
       } else if (io === 'output') {
@@ -166,7 +166,13 @@ export default {
       node.style.display = 'block'
       obj.appendChild(node)
     },
-    addFunctionalNode(item, e, widgetId) {
+    addAllFilterPortName(wrapId, item) {
+      this.addFilterPortName(wrapId, this.addNode('span', '', ''), item.servName, 'title')
+      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.input[0].iname, 'left')
+      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
+      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
+    },
+    addFunctionalNode(item, e, widgetId) { // 添加port节点
       let inputLength = item.input.length
       let outputLength = item.output.length
       let type = ''
@@ -189,13 +195,12 @@ export default {
     addFilterNode(item, e, widgetId, wrapId) {
       this.addWidgetNode('canvas', e, this.addNode('div', 'filterWrap', wrapId))
       this.addWidgetNode(wrapId, e, this.addNode('div', 'filter', widgetId))
-      this.addFilterPortName(wrapId, this.addNode('span', '', ''), item.servName, 'title')
-      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.input[0].iname, 'left')
-      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
-      this.addFilterPortName(wrapId, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
+      this.addAllFilterPortName(wrapId, item)
       let type = ''
       item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
       this.addFilterPoint(wrapId, type, 0)
+
+      this.addWidgetNode(wrapId, e, this.addNode('input', 'filterInput', ''))
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filterWrap'))
     },
     updateConnections(conn, remove) {
@@ -312,5 +317,10 @@ export default {
     -webkit-transform:rotate(45deg);
     -o-transform:rotate(45deg);
     transform:rotate(45deg);
+  }
+  .filterInput{
+    width: 100px;
+    display: block;
+    margin: 20px 38px;
   }
 </style>
