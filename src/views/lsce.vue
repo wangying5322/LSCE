@@ -28,7 +28,8 @@ export default {
       instance: '',
       combinedToollist: [],
       connections: [],
-      n: -1,
+      dn: -1, // divNum
+      fn: -1, // filterNum
       filterInputValue: []
     }
   },
@@ -47,6 +48,9 @@ export default {
   },
   mounted() {
     this.getJsplumbInstance()
+    document.oncontextmenu = function() {
+      return false
+    }
   },
   methods: {
     getJsplumbInstance() {
@@ -81,18 +85,24 @@ export default {
           _this.instance.bind('connectionMoved', function (info, originalEvent) {
             _this.updateConnections(info, true);
           })
+          // _this.instance.bind('onmousedown', function (ev) {
+          //   console.log('按键')
+          //   if (ev.button === 2) {
+          //     console.log('右键')
+          //     _this.instance.removeAllEndpoints(_this.instance)
+          //   }
+          // })
         })
       })
     },
     showWidget(item) {
-      console.log(item)
+      // console.log(item)
       var e = event || window.event
       let widgetId = item.servName
-      let wrapId = 'Filter' + ++this.n
       if (item.type === FUNCTIONAL) {
         this.addFunctionalNode(item, e, widgetId)
       } else if (item.type === FILTER) {
-        this.addFilterNode(item, e, widgetId, wrapId)
+        this.addFilterNode(item, e, widgetId)
       }
     },
     addFunctionalNode(item, e, widgetId) { // 添加port节点
@@ -114,16 +124,37 @@ export default {
         this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'right', pn * PORTLINEHEIGHT)
       }
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
+
+      // let _this = this
+      // let obj = document.getElementById(widgetId)
+      // obj.onmousedown = function(ev) {
+      //   if (ev.button === 2) { 
+      //     _this.deleteNode(obj)
+      //   }
+      // }
     },
-    addFilterNode(item, e, widgetId, wrapId) { // 拖出Filter框后渲染的画面
-      this.addWidgetNode('canvas', e, this.addNode('div', 'filterWrap', widgetId))
-      this.addWidgetNode(widgetId, e, this.addNode('div', 'filter', wrapId))
+    addFilterNode(item, e, widgetId) { // 拖出Filter框后渲染的画面
+      this.addWidgetNode('canvas', e, this.addNode('div', 'filter', widgetId))
+      this.addWidgetNode(widgetId, e, this.addNode('div', 'filterFrame', ''))
       this.addAllFilterPortName(widgetId, item)
       let type = ''
       item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
       this.addFilterPoint(widgetId, type, 0)
       this.addFilterInput(widgetId, e, item)
-      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filterWrap'))
+      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
+      
+      let _this = this
+      let obj = document.getElementById(widgetId)
+      if (obj) {
+        obj.onmousedown = function(ev) {
+          if (ev.button === 2) { 
+            let conf = confirm('Delete widget?')
+            if (conf === true) {
+              _this.deleteNode(obj)
+            }
+          }
+        }
+      }
     },
     addNode(nodetype, classname, id) { // 添加节点类型
       let node = document.createElement(nodetype)
@@ -202,12 +233,18 @@ export default {
       this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
     },
     addFilterInput(el, e, item) {
-      this.addWidgetNode(el, e, this.addNode('input', 'filterInput', 'filterInput' + this.n))
+      this.addWidgetNode(el, e, this.addNode('input', 'filterInput', 'filterInput' + ++this.fn))
       let filterInput = {}
-      filterInput.id = 'filterInput' + this.n
+      filterInput.id = 'filterInput' + this.fn
       filterInput.serv = item.servName
       filterInput.value = ''
       this.filterInputValue.push(filterInput)
+
+      // obj.addEventListener('click', function() {
+      //   alert('onclick')
+      //   let conf = confirm('Delete widget?')
+      //   if (conf === true) document.body.removeChild(obj)
+      // }, false)
     },
     getInputText() { // 获取所有input的实时值并保存在filterInputValue中
       let length = this.filterInputValue.length
@@ -217,6 +254,11 @@ export default {
         obj = document.getElementById(this.filterInputValue[i].id)
         console.log(`${id}: ${obj.value}`)
       }
+    },
+    deleteNode(obj) {
+      this.instance.deleteConnectionsForElement(obj)
+      this.instance.removeAllEndpoints(obj)
+      obj.remove()
     },
     updateConnections(conn, remove) {
       this.getDetail(conn)
@@ -301,12 +343,12 @@ export default {
     font-size: 12px;
     padding: 0 3px 0 3px;
   }
-  .filterWrap {
+  .filter {
     width: 170px;
     height: 170px;
     z-index: 25;
   }
-  .filter{
+  .filterFrame{
     font-family: serif;
     background-color: white;
     border: 1px solid #346789;
