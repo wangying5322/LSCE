@@ -28,7 +28,7 @@ export default {
       instance: '',
       combinedToollist: [],
       connections: [],
-      dn: -1, // divNum
+      sn: [], // serviceNum
       fn: -1, // filterNum
       filterInputValue: []
     }
@@ -96,13 +96,17 @@ export default {
       })
     },
     showWidget(item) {
-      // console.log(item)
       var e = event || window.event
-      let widgetId = item.servName
+      if (!this.sn[item.servName]) {
+        this.sn[item.servName] = 1
+      } else {
+        ++this.sn[item.servName]
+      }
+      let newId = item.servName + this.sn[item.servName]
       if (item.type === FUNCTIONAL) {
-        this.addFunctionalNode(item, e, widgetId)
+        this.addFunctionalNode(item, e, newId)
       } else if (item.type === FILTER) {
-        this.addFilterNode(item, e, widgetId)
+        this.addFilterNode(item, e, newId)
       }
     },
     addFunctionalNode(item, e, widgetId) { // 添加port节点
@@ -125,13 +129,7 @@ export default {
       }
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
 
-      // let _this = this
-      // let obj = document.getElementById(widgetId)
-      // obj.onmousedown = function(ev) {
-      //   if (ev.button === 2) { 
-      //     _this.deleteNode(obj)
-      //   }
-      // }
+      this.deleteNode(widgetId)
     },
     addFilterNode(item, e, widgetId) { // 拖出Filter框后渲染的画面
       this.addWidgetNode('canvas', e, this.addNode('div', 'filter', widgetId))
@@ -143,18 +141,19 @@ export default {
       this.addFilterInput(widgetId, e, item)
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
       
-      let _this = this
-      let obj = document.getElementById(widgetId)
-      if (obj) {
-        obj.onmousedown = function(ev) {
-          if (ev.button === 2) { 
-            let conf = confirm('Delete widget?')
-            if (conf === true) {
-              _this.deleteNode(obj)
-            }
-          }
-        }
-      }
+      // let _this = this
+      // let obj = document.getElementById(widgetId)
+      // if (obj) {
+      //   obj.onmousedown = function(ev) {
+      //     if (ev.button === 2) { 
+      //       let conf = confirm('Delete widget?')
+      //       if (conf === true) {
+      //         _this.deleteNode(obj)
+      //       }
+      //     }
+      //   }
+      // }
+      this.deleteNode(widgetId)
     },
     addNode(nodetype, classname, id) { // 添加节点类型
       let node = document.createElement(nodetype)
@@ -255,10 +254,25 @@ export default {
         console.log(`${id}: ${obj.value}`)
       }
     },
-    deleteNode(obj) {
-      this.instance.deleteConnectionsForElement(obj)
-      this.instance.removeAllEndpoints(obj)
-      obj.remove()
+    deleteNode(widgetId) {
+      let _this = this
+      let obj = document.getElementById(widgetId)
+      if (obj) {
+        obj.onmousedown = function(ev) {
+          if (ev.button === 2) { 
+            let conf = confirm('Delete widget?')
+            if (conf === true) {
+              // _this.deleteNode(obj)
+              _this.instance.deleteConnectionsForElement(obj)
+              _this.instance.removeAllEndpoints(obj)
+              obj.remove()
+            }
+          }
+        }
+      }
+      // this.instance.deleteConnectionsForElement(obj)
+      // this.instance.removeAllEndpoints(obj)
+      // obj.remove()
     },
     updateConnections(conn, remove) {
       this.getDetail(conn)
