@@ -17,13 +17,11 @@
 <script>
 import {jsPlumb} from 'jsplumb'
 import {mapGetters} from 'vuex'
-import {typeNumber, typeString, typeBoolean} from 'common/point'
+import {addFunctionalNode, addFilterNode} from 'common/js/lsce_jsplumb'
 import Tool from 'components/base/tool'
 import ShowJson from 'components/base/ShowJson'
-const PORTLINEHEIGHT = 24
 const FUNCTIONAL = 'functional'
 const FILTER = 'filter'
-const FILTERHEIGHT = 170
 
 export default {
   data() {
@@ -102,129 +100,12 @@ export default {
       widgetId = item.servName + this.sn[item.servName]++
 
       if (item.type === FUNCTIONAL) {
-        this.addFunctionalNode(item, e, widgetId)
+        addFunctionalNode(item, e, widgetId, this.instance)
+        this.setJson('nodes', widgetId)
       } else if (item.type === FILTER) {
-        this.addFilterNode(item, e, widgetId)
+        addFilterNode(item, e, widgetId, this.instance, this.fn, this.filterInputValue)
+        this.setJson('nodes', widgetId)
       }
-    },
-    addFunctionalNode(item, e, widgetId) { // 添加port节点
-      let inputLength = item.input.length
-      let outputLength = item.output.length
-      let type = ''
-      let i = 0
-      let pn = 0 // input/output pointNum
-      this.addWidgetNode('canvas', e, this.addNode('div', 'window', widgetId))
-      this.addFunctionalPortName(widgetId, this.addNode('span', '', ''), item.servName, 'title', 0)
-      for (pn = 0; pn < inputLength; pn++, i++) {
-        item.input[pn].itype === 'Number' ? type = typeNumber : item.input[pn].itype === 'String' ? type = typeString : type = typeBoolean
-        this.addFunctionalPoint(widgetId, 'input', pn, type, i)
-        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.input[pn].iname, 'left', (pn + 1) * PORTLINEHEIGHT)
-      }
-      for (pn = 0; pn < outputLength; pn++, i++) {
-        item.output[pn].otype === 'Number' ? type = typeNumber : item.output[pn].otype === 'String' ? type = typeString : type = typeBoolean
-        this.addFunctionalPoint(widgetId, 'output', pn, type, i)
-        this.addFunctionalPortName(widgetId, this.addNode('span', 'portname', ''), item.output[pn].oname, 'right', pn * PORTLINEHEIGHT)
-      }
-      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
-
-      this.deleteNode(widgetId)
-    },
-    addFilterNode(item, e, widgetId) { // 拖出Filter框后渲染的画面
-      this.addWidgetNode('canvas', e, this.addNode('div', 'filter', widgetId))
-      this.addWidgetNode(widgetId, e, this.addNode('div', 'filterFrame', ''))
-      this.addAllFilterPortName(widgetId, item)
-      let type = ''
-      item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
-      this.addFilterPoint(widgetId, type, 0)
-      this.addFilterInput(widgetId, e, item)
-      this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
-      
-      this.setJson('nodes', widgetId)
-      this.deleteNode(widgetId)
-    },
-    addNode(nodetype, classname, id) { // 添加节点类型
-      let node = document.createElement(nodetype)
-      node.className = classname
-      node.id = id
-      return node
-    },
-    addWidgetNode(el, e, node) { // 添加到定点位置
-      let obj = document.getElementById(el)
-      if (el === 'canvas') {
-        node.style.top = e.clientY - 40 + 'px'
-        node.style.left = e.clientX - 330 + 'px'
-      }
-      node.style.position = 'absolute'
-      obj.appendChild(node) 
-    },
-    addFunctionalPoint(el, io, pn, type, index) { // 添加port样式锚点
-      if (io === 'input') {
-        this.instance.my_addEndpoint(el, { anchor: [0, 0.3 + pn * 0.2, -1, 0] }, type, index)
-      } else if (io === 'output') {
-        this.instance.my_addEndpoint(el, { anchor: [1, 0.9 - pn * 0.2, 1, 0] }, type, index)
-      }
-    },
-    addFilterPoint(el, type, index) {
-      this.instance.my_addEndpoint(el, { anchor: 'LeftMiddle' }, type, index++)
-      this.instance.my_addEndpoint(el, { anchor: 'RightMiddle' }, type, index++)
-      this.instance.my_addEndpoint(el, { anchor: 'BottomCenter' }, type, index++)
-    },
-    addFunctionalPortName(el, node, text, pos, val) { // 添加portname
-      let obj = document.getElementById(el)
-      node.innerText = text
-      if (pos === 'left') {
-        node.style.top = val + 'px'
-        node.style.left = 0
-        node.style.position = 'absolute'
-      } else if (pos === 'right') {
-        node.style.bottom = val + 'px'
-        node.style.right = 0
-        node.style.position = 'absolute'
-      } else if (pos === 'title') {
-        node.style.top = val + 'px'
-        node.style.textAlign = 'center'
-        node.style.fontWeight = 'bold'
-      }
-      node.style.display = 'block'
-      obj.appendChild(node)
-    },
-    addFilterPortName(el, node, text, pos) {
-      let obj = document.getElementById(el)
-      node.innerText = text
-      if (pos === 'title') {
-        node.style.paddingTop = '35px'
-        node.style.textAlign = 'center'
-        node.style.fontWeight = 'bold'
-      } else if (pos === 'left') { // input
-        node.style.top = FILTERHEIGHT / 2 - 6 + 'px'
-        node.style.left = '12px'
-        node.style.position = 'absolute'
-      } else if (pos === 'right') { // Y
-        node.style.top = FILTERHEIGHT / 2 - 6 + 'px'
-        node.style.right = '12px'
-        node.style.position = 'absolute'
-      } else if (pos === 'bottom') { // N
-        node.style.bottom = '8px'
-        node.style.left = FILTERHEIGHT / 2 - 8 + 'px'
-        node.style.textAlign = 'center'
-        node.style.position = 'absolute'
-      }
-      node.style.display = 'block'
-      obj.appendChild(node)
-    },
-    addAllFilterPortName(id, item) {
-      this.addFilterPortName(id, this.addNode('span', '', ''), item.servName, 'title')
-      this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.input[0].iname, 'left')
-      this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[0].oname, 'right')
-      this.addFilterPortName(id, this.addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
-    },
-    addFilterInput(el, e, item) {
-      this.addWidgetNode(el, e, this.addNode('input', 'filterInput', 'filterInput' + ++this.fn))
-      let filterInput = {}
-      filterInput.id = 'filterInput' + this.fn
-      filterInput.serv = item.servName
-      filterInput.value = ''
-      this.filterInputValue.push(filterInput)
     },
     getInputText() { // 获取所有input的实时值并保存在filterInputValue中
       let length = this.filterInputValue.length
@@ -233,23 +114,6 @@ export default {
         let id = 'filterInput' + i
         obj = document.getElementById(this.filterInputValue[i].id)
         console.log(`${id}: ${obj.value}`)
-      }
-    },
-    deleteNode(widgetId) {
-      let _this = this
-      let obj = document.getElementById(widgetId)
-      if (obj) {
-        obj.onmousedown = function(ev) {
-          if (ev.button === 2) { 
-            ev.preventDefault()
-            let conf = confirm('Delete widget?')
-            if (conf === true) {
-              _this.instance.deleteConnectionsForElement(obj)
-              _this.instance.removeAllEndpoints(obj)
-              obj.remove()
-            }
-          }
-        }
       }
     },
     updateConnections(conn, remove) {
@@ -294,9 +158,6 @@ export default {
       console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
     },
     setJson(prop, value) {
-      // if (!this.json) {
-      //   this.json = '{}'
-      // }
       let newValue = this.json[prop] + ', ' + value
       value = this.json[prop] ? newValue : value
       this.$set(this.json, prop, value)
