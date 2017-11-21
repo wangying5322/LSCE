@@ -61,7 +61,7 @@ export default {
     bottom: 0;
 		width: 330px;
 		/*height: 100%;*/
-		border: 1px solid #ccc;
+		/*border: 1px solid #ccc;*/
 		background: #fbfbff;
     padding: 20px 10px 10px;
     overflow: scroll;

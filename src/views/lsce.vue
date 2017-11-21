@@ -9,6 +9,8 @@
     <div class="jtk-demo-canvas canvas-wide drag-drop-demo jtk-surface jtk-surface-nopan" id="canvas" @keyup='getInputText'>
     </div>
   </div>
+  <!-- 一个模板，显示json信息 -->
+  <ShowJson :json='json'></ShowJson>
 </div>
 </template>
 
@@ -17,6 +19,7 @@ import {jsPlumb} from 'jsplumb'
 import {mapGetters} from 'vuex'
 import {typeNumber, typeString, typeBoolean} from 'common/point'
 import Tool from 'components/base/tool'
+import ShowJson from 'components/base/ShowJson'
 const PORTLINEHEIGHT = 24
 const FUNCTIONAL = 'functional'
 const FILTER = 'filter'
@@ -26,11 +29,12 @@ export default {
   data() {
     return {
       instance: '',
-      combinedToollist: [],
-      connections: [],
-      sn: [], // serviceNum
+      combinedToollist: [], // 将所有可以拖出来的节点抽出来整合出一个数组
+      connections: [], // 记录连线
+      sn: [], // 记录/产生serviceId
       fn: -1, // filterNum
-      filterInputValue: []
+      filterInputValue: [],
+      json: {}
     }
   },
   computed: {
@@ -44,13 +48,14 @@ export default {
     }
   },
   components: {
-    Tool
+    Tool,
+    ShowJson
   },
   mounted() {
     this.getJsplumbInstance()
-    document.oncontextmenu = function() {
-      return false
-    }
+    // document.oncontextmenu = function() {
+    //   return false
+    // }
   },
   methods: {
     getJsplumbInstance() {
@@ -85,28 +90,21 @@ export default {
           _this.instance.bind('connectionMoved', function (info, originalEvent) {
             _this.updateConnections(info, true);
           })
-          // _this.instance.bind('onmousedown', function (ev) {
-          //   console.log('按键')
-          //   if (ev.button === 2) {
-          //     console.log('右键')
-          //     _this.instance.removeAllEndpoints(_this.instance)
-          //   }
-          // })
         })
       })
     },
     showWidget(item) {
       var e = event || window.event
-      if (!this.sn[item.servName]) {
-        this.sn[item.servName] = 1
-      } else {
-        ++this.sn[item.servName]
-      }
-      let newId = item.servName + this.sn[item.servName]
+      let widgetId = ''
+      if (!this.sn[item.servName]) { 
+        this.sn[item.servName] = 0
+      } 
+      widgetId = item.servName + this.sn[item.servName]++
+
       if (item.type === FUNCTIONAL) {
-        this.addFunctionalNode(item, e, newId)
+        this.addFunctionalNode(item, e, widgetId)
       } else if (item.type === FILTER) {
-        this.addFilterNode(item, e, newId)
+        this.addFilterNode(item, e, widgetId)
       }
     },
     addFunctionalNode(item, e, widgetId) { // 添加port节点
@@ -141,18 +139,7 @@ export default {
       this.addFilterInput(widgetId, e, item)
       this.instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
       
-      // let _this = this
-      // let obj = document.getElementById(widgetId)
-      // if (obj) {
-      //   obj.onmousedown = function(ev) {
-      //     if (ev.button === 2) { 
-      //       let conf = confirm('Delete widget?')
-      //       if (conf === true) {
-      //         _this.deleteNode(obj)
-      //       }
-      //     }
-      //   }
-      // }
+      this.setJson('nodes', widgetId)
       this.deleteNode(widgetId)
     },
     addNode(nodetype, classname, id) { // 添加节点类型
@@ -238,12 +225,6 @@ export default {
       filterInput.serv = item.servName
       filterInput.value = ''
       this.filterInputValue.push(filterInput)
-
-      // obj.addEventListener('click', function() {
-      //   alert('onclick')
-      //   let conf = confirm('Delete widget?')
-      //   if (conf === true) document.body.removeChild(obj)
-      // }, false)
     },
     getInputText() { // 获取所有input的实时值并保存在filterInputValue中
       let length = this.filterInputValue.length
@@ -260,9 +241,9 @@ export default {
       if (obj) {
         obj.onmousedown = function(ev) {
           if (ev.button === 2) { 
+            ev.preventDefault()
             let conf = confirm('Delete widget?')
             if (conf === true) {
-              // _this.deleteNode(obj)
               _this.instance.deleteConnectionsForElement(obj)
               _this.instance.removeAllEndpoints(obj)
               obj.remove()
@@ -270,9 +251,6 @@ export default {
           }
         }
       }
-      // this.instance.deleteConnectionsForElement(obj)
-      // this.instance.removeAllEndpoints(obj)
-      // obj.remove()
     },
     updateConnections(conn, remove) {
       this.getDetail(conn)
@@ -314,6 +292,14 @@ export default {
       let targetEndpointIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
       console.log(`connection[${conn.connection.id}] source: ${sourceDevice.servName}.${sourceDevice.output[sourceEndpointIndex].oname}`)
       console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
+    },
+    setJson(prop, value) {
+      // if (!this.json) {
+      //   this.json = '{}'
+      // }
+      let newValue = this.json[prop] + ', ' + value
+      value = this.json[prop] ? newValue : value
+      this.$set(this.json, prop, value)
     }
   }
 }
@@ -346,7 +332,7 @@ export default {
     top: 40px;
     bottom: 0;
     left: 330px;
-    right: 0;
+    right: 300px;
     border: 1px solid #ccc;
   }
   #canvas{
