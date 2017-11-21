@@ -32,7 +32,7 @@ export default {
       sn: [], // 记录/产生serviceId
       fn: -1, // filterNum
       filterInputValue: [],
-      json: {}
+      json: {'nodes': [], 'edges': []}
     }
   },
   computed: {
@@ -107,14 +107,16 @@ export default {
         this.setJson('nodes', widgetId)
       }
     },
-    getInputText() { // 获取所有input的实时值并保存在filterInputValue中
-      let length = this.filterInputValue.length
-      let obj = ''
-      for (let i = 0; i < length; i++) {
-        let id = 'filterInput' + i
-        obj = document.getElementById(this.filterInputValue[i].id)
-        console.log(`${id}: ${obj.value}`)
-      }
+    getInputText(id) { // 获取所有input的实时值并保存在filterInputValue中
+      // let length = this.filterInputValue.length
+      // let obj = ''
+      // for (let i = 0; i < length; i++) {
+      //   let id = 'filterInput' + i
+      //   obj = document.getElementById(this.filterInputValue[i].id)
+      //   console.log(`${id}: ${obj.value}`)
+      // }
+      let obj = document.getElementById(id)
+      return obj.value
     },
     updateConnections(conn, remove) {
       this.getDetail(conn)
@@ -157,10 +159,27 @@ export default {
       console.log(`connection[${conn.connection.id}] source: ${sourceDevice.servName}.${sourceDevice.output[sourceEndpointIndex].oname}`)
       console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
     },
-    setJson(prop, value) {
-      let newValue = this.json[prop] + ', ' + value
-      value = this.json[prop] ? newValue : value
-      this.$set(this.json, prop, value)
+    setJson(prop, value) { // prop代表nodes/edges, value代表widgetId
+      // let newValue = this.json[prop] + ', \n' + value
+      // value = this.json[prop] ? newValue : value
+      // this.json[prop] = value
+      let temp = value.replace(/[0-9]/g, '') // 这里末尾多了一个数字
+      let target = ''
+      this.combinedToollist.forEach(function(item) {
+        if (item.servName === temp) {
+          target = item
+        }
+      })
+
+      let node = {}
+      node.div_id = value
+      node.servName = target.servName
+      node.id = target.id
+      node.type = target.type
+      node.obj_info = this.getInputText(value) // 先设为‘’，后期监听键盘事件根据filterInputValue一起更新？
+      
+      this.json.nodes.push(node)
+      // this.$set(this.json, prop, value)
     }
   }
 }
@@ -198,7 +217,6 @@ export default {
   }
   #canvas{
     height: 100%;
-    bottom: 0;
   }
   .portname{
     font-size: 12px;

@@ -1,15 +1,39 @@
 <template>
 	<div class="showJson">
-		{{json}}
+		{{this.data}}
 	</div>
 </template>
 
 <script>
 export default {
+  data() {
+    return {
+      // data: ''
+    }
+  },
   props: {
     json: {
       type: Object,
       default: ''
+    }
+  },
+  mounted() {
+    // this.ArrayToJson(this.json)
+  },
+  methods: {
+    // ArrayToJson(json) {
+    //   console.log('in')
+    //   console.log(json)
+    //   this.data = JSON.stringify(json)
+    //   console.log(this.data)
+    // }
+  },
+  computed: {
+    data() {
+      console.log('in')
+      let str = JSON.stringify(this.json)
+      console.log(str)
+      return str
     }
   }
 }
