@@ -239,13 +239,13 @@ export default {
       }
     },
     ioError(conn) {
-      console.log(conn)
-      let src = this.getTarget(this.combinedToollist, 'servName', conn.sourceId.replace(/[0-9]/g, ''))
-      let dst = this.getTarget(this.combinedToollist, 'servName', conn.targetId.replace(/[0-9]/g, ''))
-      if (src === dst) {
+      // console.log(conn)
+      if (conn.sourceId === conn.targetId) {
         console.log('Error! Can not connect with self')
         return false
       } else {
+        let src = this.getTarget(this.combinedToollist, 'servName', conn.sourceId.replace(/[0-9]/g, ''))
+        let dst = this.getTarget(this.combinedToollist, 'servName', conn.targetId.replace(/[0-9]/g, ''))
         let srcPortIndex = conn.connection.endpoints[0].id.match(/_(\S*)_/)[1]
         let dstPortIndex = conn.dropEndpoint.id.match(/_(\S*)_/)[1] // 奇葩
         let srcinPortLength = src.input.length
