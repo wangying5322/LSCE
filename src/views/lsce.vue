@@ -94,18 +94,22 @@ export default {
     },
     showWidget(item) {
       var e = event || window.event
-      let widgetId = ''
-      if (!this.sn[item.servName]) { 
-        this.sn[item.servName] = 0
-      } 
-      widgetId = item.servName + this.sn[item.servName]++
+      if (e.clientX >= 330 && e.clientX < window.innerWidth - 300) {
+        let widgetId = ''
+        if (!this.sn[item.servName]) { 
+          this.sn[item.servName] = 0
+        } 
+        widgetId = item.servName + this.sn[item.servName]++
 
-      if (item.type === FUNCTIONAL) {
-        addFunctionalNode(item, e, widgetId, this.instance)
-        this.updateJsonNodes('add', widgetId)
-      } else if (item.type === FILTER) {
-        addFilterNode(item, e, widgetId, this.instance)
-        this.updateJsonNodes('add', widgetId)
+        if (item.type === FUNCTIONAL) {
+          addFunctionalNode(item, e, widgetId, this.instance)
+          this.updateJsonNodes('add', widgetId)
+        } else if (item.type === FILTER) {
+          addFilterNode(item, e, widgetId, this.instance)
+          this.updateJsonNodes('add', widgetId)
+        }
+      } else {
+        console.log('you are out of the boundary')
       }
     },
     getInputText(e) { // 获取所有input的实时值并保存在filterInputValue中
@@ -146,28 +150,9 @@ export default {
         console.log('no connection')
       }
     },
-    _getDeviceContent(deviceName) { // 方便转成json
-      let targetDevice = ''
-      this.combinedToollist.forEach((item) => {
-        if (item.servName === deviceName) {
-          targetDevice = item
-        }
-      })
-      return targetDevice
-    },
     _normalizeToollist() { // 方便转成json
       this.combinedToollist = this.toolList[0].listContent.concat(this.toolList[1].listContent)
       console.log(this.combinedToollist)
-    },
-    getDetail(conn) { // 打印连接信息
-      let sourceDevice = this._getDeviceContent(conn.sourceId)
-      let targetDevice = this._getDeviceContent(conn.targetId)
-
-      let sourceEndpointIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]
-      let targetEndpointIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
-
-      console.log(`connection[${conn.connection.id}] source: ${sourceDevice.servName}.${sourceDevice.output[sourceEndpointIndex].oname}`)
-      console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
     },
     deleteNode(e) {
       let _this = this
@@ -220,15 +205,15 @@ export default {
         this.json.nodes.splice(index, 1)
       }
     },
-    deleteEdge() {
-    },
     updateJsonEdges(type, conn) {
       // 这里的conn.sourceId和targetId后面也多了数字
       if (type === 'add') {
         let src = this.getTarget(this.combinedToollist, 'servName', conn.sourceId.replace(/[0-9]/g, ''))
         let dst = this.getTarget(this.combinedToollist, 'servName', conn.targetId.replace(/[0-9]/g, ''))
-        let srcPortIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]
+        // 这里计算的是一个node里在所有port的index
+        let srcPortIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1] - src.input.length 
         let dstPortIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
+
         this.json.edges.push(new Edge({
           connId: conn.connection.id,
           SRCdivId: conn.sourceId, 
