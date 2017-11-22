@@ -3,14 +3,14 @@ import {jsPlumb} from 'jsplumb'
 const PORTLINEHEIGHT = 24
 const FILTERHEIGHT = 170
 
-export function addNode(nodetype, classname, id) { // 添加节点类型
+function addNode(nodetype, classname, id) { // 添加节点类型
   let node = document.createElement(nodetype)
   node.className = classname
   node.id = id
   return node
 }
 
-export function addWidgetNode(el, e, node) { // 添加到定点位置
+function addWidgetNode(el, e, node) { // 添加到定点位置
   let obj = document.getElementById(el)
   if (el === 'canvas') {
     node.style.top = e.clientY - 40 + 'px'
@@ -20,7 +20,7 @@ export function addWidgetNode(el, e, node) { // 添加到定点位置
   obj.appendChild(node) 
 }
 
-export function addFunctionalPoint(el, io, pn, type, index, _instance) { // 添加port样式锚点
+function addFunctionalPoint(el, io, pn, type, index, _instance) { // 添加port样式锚点
   if (io === 'input') {
     _instance.my_addEndpoint(el, { anchor: [0, 0.3 + pn * 0.2, -1, 0] }, type, index)
   } else if (io === 'output') {
@@ -28,7 +28,7 @@ export function addFunctionalPoint(el, io, pn, type, index, _instance) { // 添�
   }
 }
 
-export function addFunctionalPortName(el, node, text, pos, val) { // 添加portname
+function addFunctionalPortName(el, node, text, pos, val) { // 添加portname
   let obj = document.getElementById(el)
   node.innerText = text
   if (pos === 'left') {
@@ -67,36 +67,15 @@ export function addFunctionalNode(item, e, widgetId, _instance) { // 添加port�
     addFunctionalPortName(widgetId, addNode('span', 'portname', ''), item.output[pn].oname, 'right', pn * PORTLINEHEIGHT)
   }
   _instance.draggable(jsPlumb.getSelector('.drag-drop-demo .window'))
-
-  deleteNode(widgetId, this)
 }
 
-export function addFilterPoint(el, type, index, _instance) {
+function addFilterPoint(el, type, index, _instance) {
   _instance.my_addEndpoint(el, { anchor: 'LeftMiddle' }, type, index++)
   _instance.my_addEndpoint(el, { anchor: 'RightMiddle' }, type, index++)
   _instance.my_addEndpoint(el, { anchor: 'BottomCenter' }, type, index++)
 }
 
-export function addAllFilterPortName(id, item) {
-  addFilterPortName(id, addNode('span', '', ''), item.servName, 'title')
-  addFilterPortName(id, addNode('span', 'portname', ''), item.input[0].iname, 'left')
-  addFilterPortName(id, addNode('span', 'portname', ''), item.output[0].oname, 'right')
-  addFilterPortName(id, addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
-}
-
-export function addFilterNode(item, e, widgetId, _instance) { // 拖出Filter框后渲染的画面
-  addWidgetNode('canvas', e, addNode('div', 'filter', widgetId))
-  addWidgetNode(widgetId, e, addNode('div', 'filterFrame', ''))
-  addAllFilterPortName(widgetId, item)
-  let type = ''
-  item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
-  addFilterPoint(widgetId, type, 0, _instance)
-  addWidgetNode(widgetId, e, addNode('input', 'filterInput', widgetId + '_filterInput'))
-  _instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
-  deleteNode(widgetId, _instance)
-}
-
-export function addFilterPortName(el, node, text, pos) {
+function addFilterPortName(el, node, text, pos) {
   let obj = document.getElementById(el)
   node.innerText = text
   if (pos === 'title') {
@@ -121,20 +100,20 @@ export function addFilterPortName(el, node, text, pos) {
   obj.appendChild(node)
 }
 
-export function deleteNode(widgetId, _instance) {
-  // let __this = _this
-  let obj = document.getElementById(widgetId)
-  if (obj) {
-    obj.onmousedown = function(ev) {
-      if (ev.button === 2) { 
-        ev.preventDefault()
-        let conf = confirm('Delete widget?')
-        if (conf === true) {
-          _instance.deleteConnectionsForElement(obj)
-          _instance.removeAllEndpoints(obj)
-          obj.remove()
-        }
-      }
-    }
-  }
+function addAllFilterPortName(id, item) {
+  addFilterPortName(id, addNode('span', '', ''), item.servName, 'title')
+  addFilterPortName(id, addNode('span', 'portname', ''), item.input[0].iname, 'left')
+  addFilterPortName(id, addNode('span', 'portname', ''), item.output[0].oname, 'right')
+  addFilterPortName(id, addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
+}
+
+export function addFilterNode(item, e, widgetId, _instance) { // 拖出Filter框后渲染的画面
+  addWidgetNode('canvas', e, addNode('div', 'filter', widgetId))
+  addWidgetNode(widgetId, e, addNode('div', 'filterFrame', ''))
+  addAllFilterPortName(widgetId, item)
+  let type = ''
+  item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
+  addFilterPoint(widgetId, type, 0, _instance)
+  addWidgetNode(widgetId, e, addNode('input', 'filterInput', widgetId + '_filterInput'))
+  _instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
 }
