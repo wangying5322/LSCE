@@ -30,7 +30,6 @@ export default {
       combinedToollist: [], // 将所有可以拖出来的节点抽出来整合出一个数组
       connections: [], // 记录连线
       sn: [], // 记录/产生serviceId
-      filterInputValue: [], // 存储了每个filterInput的id/所属的servName/value
       json: {'nodes': [], 'edges': []}
     }
   },
@@ -102,20 +101,18 @@ export default {
         addFunctionalNode(item, e, widgetId, this.instance)
         this.setJson('nodes', widgetId)
       } else if (item.type === FILTER) {
-        addFilterNode(item, e, widgetId, this.instance, this.filterInputValue)
+        addFilterNode(item, e, widgetId, this.instance)
         this.setJson('nodes', widgetId)
       }
     },
     getInputText(e) { // 获取所有input的实时值并保存在filterInputValue中
       let filterInputId = e.target.id
       let obj = document.getElementById(filterInputId) // 在dom中的结构体
-      let InputTarget = this.getTarget(this.filterInputValue, 'id', filterInputId) // 在filterInputValue中的结构体
-      InputTarget.value = obj.value
 
       let divId = e.target.parentNode.id // 用于查找json.nodes中的对应结构体
       let jsonNodesTarget = this.getTarget(this.json.nodes, 'div_id', divId)
       let index = this.json.nodes.indexOf(jsonNodesTarget) 
-      this.$set(this.json.nodes[index], 'obj_info', InputTarget.value)
+      this.$set(this.json.nodes[index], 'obj_info', obj.value)
     },
     getTarget(el, prop, value) {
       let target = ''
@@ -168,9 +165,6 @@ export default {
       console.log(`connection[${conn.connection.id}] target: ${targetDevice.servName}.${targetDevice.input[targetEndpointIndex].iname}`)
     },
     setJson(prop, value) { // prop代表nodes/edges, value代表widgetId
-      // let newValue = this.json[prop] + ', \n' + value
-      // value = this.json[prop] ? newValue : value
-      // this.json[prop] = value
       let temp = value.replace(/[0-9]/g, '') // 这里末尾多了一个数字，要在服务库中找到该服务名temp对应的具体的服务tartget的信息
       let target = ''
       this.combinedToollist.forEach(function(item) {
@@ -186,12 +180,8 @@ export default {
       node.type = target.type
       if (target.type === 'filter') {
         node.obj_info = ''
-        // node.obj_info = this.filterInputValue[]
-      }
-      // node.obj_info = this.getInputText(value) // 先设为‘’，后期监听键盘事件根据filterInputValue一起更新？
-      
+      } 
       this.json.nodes.push(node)
-      // this.$set(this.json, prop, value)
     }
   }
 }

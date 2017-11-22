@@ -31,7 +31,7 @@ export default {
   computed: {
     data() {
       let str = JSON.stringify(this.json)
-      console.log(str)
+      // console.log(str)
       return str
     }
   }
