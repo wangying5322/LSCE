@@ -133,21 +133,15 @@ export default {
       return target
     },
     updateConnections(conn, remove) {
-      // this.getDetail(conn)
       if (!remove) {
         this.connections.push(conn) // connections记录已经连过的线
-      } else { // 如果被移除了，相应位置为-1，再从数组移除
-        let idx = -1
-        for (var i = 0; i < this.connections.length; i++) {
-          if (this.connections[i].connection === conn.connection) {
-            idx = i
-            break
-          }
-        }
-        if (idx !== -1) this.connections.splice(idx, 1)
+      } else {
+        let target = this.getTarget(this.connections, 'connection', conn.connection)
+        let index = this.connections.indexOf(target)
+        this.connections.splice(index, 1)
       }
       if (this.connections.length > 0) { 
-        // console.log(this.connections)
+        console.log(this.connections)
       } else {
         console.log('no connection')
       }
@@ -170,13 +164,15 @@ export default {
             targetId = e.target.id
           }
         }
-        let obj = document.getElementById(targetId)
-        let conf = confirm('Delete widget?')
-        if (conf === true) {
-          _this.instance.deleteConnectionsForElement(obj)
-          _this.instance.removeAllEndpoints(obj)
-          obj.remove()
-          _this.updateJsonNodes('delete', targetId)
+        if (targetId) {
+          let obj = document.getElementById(targetId)
+          let conf = confirm('Delete widget?')
+          if (conf === true) {
+            _this.instance.deleteConnectionsForElement(obj)
+            _this.instance.removeAllEndpoints(obj)
+            obj.remove()
+            _this.updateJsonNodes('delete', targetId)
+          }
         }
       }
     },
@@ -208,7 +204,6 @@ export default {
       }
     },
     updateJsonEdges(type, conn) {
-      console.log(conn)
       // 这里的conn.sourceId和targetId后面也多了数字
       if (type === 'add') {
         let src = this.getTarget(this.combinedToollist, 'servName', conn.sourceId.replace(/[0-9]/g, ''))
@@ -216,7 +211,7 @@ export default {
         // 这里计算的是一个node里在所有port的index
         let srcPortIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]  
         let dstPortIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
-        // 这里计算两个node的inport的长度
+        // 这里计算两个node的inputPort的长度
         let srcinPortLength = src.input.length
         let dstinPortLength = dst.input.length
         // 连的方向反了
@@ -228,7 +223,7 @@ export default {
             DSTdivId: conn.sourceId, 
             DSTport: src.input[srcPortIndex].iname
           }))
-        } else {
+        } else { // 正常情况
           this.json.edges.push(new Edge({
             connId: conn.connection.id,
             SRCdivId: conn.sourceId, 
@@ -252,13 +247,10 @@ export default {
         return false
       } else {
         let srcPortIndex = conn.connection.endpoints[0].id.match(/_(\S*)_/)[1]
-        let dstPortIndex = conn.dropEndpoint.id.match(/_(\S*)_/)[1]
+        let dstPortIndex = conn.dropEndpoint.id.match(/_(\S*)_/)[1] // 奇葩
         let srcinPortLength = src.input.length
         let dstinPortLength = dst.input.length
-        // if (srcPortIndex < srcinPortLength && dstPortIndex >= dstinPortLength) { // 说明方向反了，但是还有救
-        //   console.log('Error! Can not reverse the connection direction')
-        //   return false
-        // }
+
         if ((srcPortIndex < srcinPortLength && dstPortIndex < dstinPortLength) || (srcPortIndex >= srcinPortLength && dstPortIndex >= dstinPortLength)) { // 说明两种一样方向的连在一起
           console.log('Error! The type of the two ports are the same.')
           return false
