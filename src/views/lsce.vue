@@ -70,7 +70,9 @@ export default {
         })
         _this.instance.batch(function () {
           _this.instance.bind('beforeDrop', function (params) {
-            return confirm('Connect ' + params.sourceId + 'to' + params.targetId + '?')
+            if (_this.ioError(params)) {
+              return confirm('Connect ' + params.sourceId + 'to' + params.targetId + '?')
+            }
           })
           _this.instance.bind('connection', function (info, originalEvent) {
             _this.updateConnections(info)
@@ -206,26 +208,63 @@ export default {
       }
     },
     updateJsonEdges(type, conn) {
+      console.log(conn)
       // 这里的conn.sourceId和targetId后面也多了数字
       if (type === 'add') {
         let src = this.getTarget(this.combinedToollist, 'servName', conn.sourceId.replace(/[0-9]/g, ''))
         let dst = this.getTarget(this.combinedToollist, 'servName', conn.targetId.replace(/[0-9]/g, ''))
         // 这里计算的是一个node里在所有port的index
-        let srcPortIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1] - src.input.length 
+        let srcPortIndex = conn.sourceEndpoint.id.match(/_(\S*)_/)[1]  
         let dstPortIndex = conn.targetEndpoint.id.match(/_(\S*)_/)[1]
-
-        this.json.edges.push(new Edge({
-          connId: conn.connection.id,
-          SRCdivId: conn.sourceId, 
-          SRCport: src.output[srcPortIndex].oname,
-          DSTdivId: conn.targetId, 
-          DSTport: dst.input[dstPortIndex].iname
-        }))
+        // 这里计算两个node的inport的长度
+        let srcinPortLength = src.input.length
+        let dstinPortLength = dst.input.length
+        // 连的方向反了
+        if (srcPortIndex < srcinPortLength && dstPortIndex >= dstinPortLength) {
+          this.json.edges.push(new Edge({
+            connId: conn.connection.id,
+            SRCdivId: conn.targetId, 
+            SRCport: dst.output[dstPortIndex - dstinPortLength].oname,
+            DSTdivId: conn.sourceId, 
+            DSTport: src.input[srcPortIndex].iname
+          }))
+        } else {
+          this.json.edges.push(new Edge({
+            connId: conn.connection.id,
+            SRCdivId: conn.sourceId, 
+            SRCport: src.output[srcPortIndex - srcinPortLength].oname,
+            DSTdivId: conn.targetId, 
+            DSTport: dst.input[dstPortIndex].iname
+          }))
+        }  
       } else if (type === 'delete') {
         let target = this.getTarget(this.json.edges, 'conn_id', conn.connection.id)
         let index = this.json.edges.indexOf(target)
         this.json.edges.splice(index, 1)
       }
+    },
+    ioError(conn) {
+      console.log(conn)
+      let src = this.getTarget(this.combinedToollist, 'servName', conn.sourceId.replace(/[0-9]/g, ''))
+      let dst = this.getTarget(this.combinedToollist, 'servName', conn.targetId.replace(/[0-9]/g, ''))
+      if (src === dst) {
+        console.log('Error! Can not connect with self')
+        return false
+      } else {
+        let srcPortIndex = conn.connection.endpoints[0].id.match(/_(\S*)_/)[1]
+        let dstPortIndex = conn.dropEndpoint.id.match(/_(\S*)_/)[1]
+        let srcinPortLength = src.input.length
+        let dstinPortLength = dst.input.length
+        // if (srcPortIndex < srcinPortLength && dstPortIndex >= dstinPortLength) { // 说明方向反了，但是还有救
+        //   console.log('Error! Can not reverse the connection direction')
+        //   return false
+        // }
+        if ((srcPortIndex < srcinPortLength && dstPortIndex < dstinPortLength) || (srcPortIndex >= srcinPortLength && dstPortIndex >= dstinPortLength)) { // 说明两种一样方向的连在一起
+          console.log('Error! The type of the two ports are the same.')
+          return false
+        }
+      }
+      return true
     }
   }
 }

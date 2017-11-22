@@ -70,9 +70,9 @@ export function addFunctionalNode(item, e, widgetId, _instance) { // 添加port�
 }
 
 function addFilterPoint(el, type, index, _instance) {
-  _instance.my_addEndpoint(el, { anchor: 'LeftMiddle' }, type, index++)
-  _instance.my_addEndpoint(el, { anchor: 'RightMiddle' }, type, index++)
-  _instance.my_addEndpoint(el, { anchor: 'BottomCenter' }, type, index++)
+  _instance.my_addEndpoint(el, { anchor: 'LeftMiddle' }, type, index++) // 0
+  _instance.my_addEndpoint(el, { anchor: 'RightMiddle' }, type, index++) // 1
+  _instance.my_addEndpoint(el, { anchor: 'BottomCenter' }, type, index++) // 2
 }
 
 function addFilterPortName(el, node, text, pos) {
