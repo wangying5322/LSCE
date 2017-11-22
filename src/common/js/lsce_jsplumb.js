@@ -71,10 +71,11 @@ export function addFunctionalNode(item, e, widgetId, _instance) { // 添加port�
   deleteNode(widgetId, this)
 }
 
-export function addFilterInput(el, e, item, fn, filterInputValue) {
-  addWidgetNode(el, e, addNode('input', 'filterInput', 'filterInput' + ++fn))
+export function addFilterInput(el, e, item, filterInputValue) {
+  let filterInputId = el + '_filterInput'
+  addWidgetNode(el, e, addNode('input', 'filterInput', filterInputId))
   let filterInput = {}
-  filterInput.id = 'filterInput' + fn
+  filterInput.id = filterInputId
   filterInput.serv = item.servName
   filterInput.value = ''
   filterInputValue.push(filterInput)
@@ -93,14 +94,14 @@ export function addAllFilterPortName(id, item) {
   addFilterPortName(id, addNode('span', 'portname', ''), item.output[1].oname, 'bottom')
 }
 
-export function addFilterNode(item, e, widgetId, _instance, fn, filterInputValue) { // 拖出Filter框后渲染的画面
+export function addFilterNode(item, e, widgetId, _instance, filterInputValue) { // 拖出Filter框后渲染的画面
   addWidgetNode('canvas', e, addNode('div', 'filter', widgetId))
   addWidgetNode(widgetId, e, addNode('div', 'filterFrame', ''))
   addAllFilterPortName(widgetId, item)
   let type = ''
   item.input[0].itype === 'Number' ? type = typeNumber : item.input[0].itype === 'String' ? type = typeString : type = typeBoolean
   addFilterPoint(widgetId, type, 0, _instance)
-  addFilterInput(widgetId, e, item, fn, filterInputValue)
+  addFilterInput(widgetId, e, item, filterInputValue)
   _instance.draggable(jsPlumb.getSelector('.drag-drop-demo .filter'))
 
   // setJson('nodes', widgetId)

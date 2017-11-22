@@ -30,7 +30,6 @@ export default {
   },
   computed: {
     data() {
-      console.log('in')
       let str = JSON.stringify(this.json)
       console.log(str)
       return str
